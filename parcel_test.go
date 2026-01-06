@@ -18,6 +18,7 @@ var (
 
 func getTestParcel() Parcel {
 	return Parcel{
+		Number:    0,
 		Client:    1000,
 		Status:    ParcelStatusRegistered,
 		Address:   "test",
@@ -27,6 +28,10 @@ func getTestParcel() Parcel {
 
 func TestAddGetDelete(t *testing.T) {
 	db, err := sql.Open("sqlite", "file:tracker.db?cache=shared&mode=rwc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -35,11 +40,9 @@ func TestAddGetDelete(t *testing.T) {
 	require.NotZero(t, id)
 
 	storedParcel, err := store.Get(id)
+	storedParcel.Number = 0
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	require.Equal(t, parcel, storedParcel)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -50,6 +53,10 @@ func TestAddGetDelete(t *testing.T) {
 
 func TestSetAddress(t *testing.T) {
 	db, err := sql.Open("sqlite", "file:tracker.db?cache=shared&mode=rwc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
 	store := NewParcelStore(db)
 
 	parcel := getTestParcel()
@@ -71,6 +78,10 @@ func TestSetAddress(t *testing.T) {
 
 func TestSetStatus(t *testing.T) {
 	db, err := sql.Open("sqlite", "file:tracker.db?cache=shared&mode=rwc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
 	store := NewParcelStore(db)
 
 	parcel := getTestParcel()
@@ -88,6 +99,10 @@ func TestSetStatus(t *testing.T) {
 
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "file:tracker.db?cache=shared&mode=rwc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
 	store := NewParcelStore(db)
 
 	parcels := []Parcel{
@@ -118,9 +133,7 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		addedParcel, exists := parcelMap[parcel.Number]
 		require.True(t, exists)
-		require.Equal(t, addedParcel.Client, parcel.Client)
-		require.Equal(t, addedParcel.Status, parcel.Status)
-		require.Equal(t, addedParcel.Address, parcel.Address)
-		require.Equal(t, addedParcel.CreatedAt, parcel.CreatedAt)
+		addedParcel.Number = 0
+		require.Equal(t, addedParcel, parcel)
 	}
 }
